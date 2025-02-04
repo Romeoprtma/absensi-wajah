@@ -1,5 +1,5 @@
 DB_CONFIG = {
-    "host": "127.0.0.1",
+    "host": "romeoprtma.mysql.pythonanywhere-services.com",
     "user": "root",
     "password": "",
     "database": "absensi"

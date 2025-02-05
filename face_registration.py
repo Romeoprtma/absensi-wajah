@@ -3,7 +3,7 @@ import face_recognition
 import pickle
 import base64
 import numpy as np
-import mysql.connector
+import sqlite3
 from db import get_db_connection
 
 def is_face_registered(new_face_encoding):
@@ -54,8 +54,8 @@ def register_face(name, nis, mapel, image_base64):
         # Simpan encoding ke database
         encoded_face = pickle.dumps(face_encoding)
         cursor.execute(
-            "INSERT INTO users (name, NIS, mapel, face_encoding) VALUES (%s, %s, %s, %s)", 
-            (name, nis, mapel, mysql.connector.Binary(encoded_face))
+            "INSERT INTO users (name, NIS, mapel, face_encoding) VALUES (?, ?, ?, ?)", 
+            (name, nis, mapel, sqlite3.Binary(encoded_face))
         )
         conn.commit()
         return {"message": f"Wajah {name} berhasil diregistrasi!"}

@@ -7,6 +7,13 @@ from flask import jsonify
 from datetime import datetime
 from db import get_db_connection
 
+def parse_waktu(waktu_str):
+    """Fungsi untuk mengubah string waktu ke format time Python"""
+    try:
+        return datetime.strptime(waktu_str, "%H:%M:%S").time()
+    except ValueError:
+        return datetime.strptime(waktu_str, "%H:%M").time()
+
 def process_attendance(image_base64):
     try:
         conn = get_db_connection()
@@ -41,12 +48,11 @@ def process_attendance(image_base64):
                 user_id, name, nis = known_names[best_match_index]
                 hari_inggris = datetime.now().strftime("%A")
                 hari_indonesia = konversi_hari_ke_indonesia(hari_inggris)
-                waktu_absensi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                
+                waktu_absensi = datetime.now().strftime("%Y-%m-%d %H:%M")
 
                 # Periksa apakah absensi dalam rentang waktu yang diperbolehkan
                 if cek_jadwal_absensi():
-                    cursor.execute("INSERT INTO attendance (user_id, hari, waktu_absensi) VALUES (%s, %s, %s)", 
+                    cursor.execute("INSERT INTO attendance (user_id, hari, waktu_absensi) VALUES (?, ?, ?)", 
                                    (user_id, hari_indonesia, waktu_absensi))
                     conn.commit()
                     return {"message": f"{name} berhasil absen pada {hari_indonesia}, {waktu_absensi}"}
@@ -79,7 +85,7 @@ def cek_jadwal_absensi():
     hari_sekarang = konversi_hari_ke_indonesia(datetime.now().strftime("%A"))
     waktu_sekarang = datetime.now().time()
     
-    query = "SELECT jam_mulai, jam_selesai FROM jadwal_absensi WHERE hari = %s AND aktif = TRUE"
+    query = "SELECT jam_mulai, jam_selesai FROM jadwal_absensi WHERE hari = ? AND aktif = 1"
     cursor.execute(query, (hari_sekarang,))
     jadwal = cursor.fetchone()
     
@@ -88,9 +94,16 @@ def cek_jadwal_absensi():
     
     if jadwal:
         jam_mulai, jam_selesai = jadwal
-        jam_mulai = datetime.strptime(str(jam_mulai), "%H:%M:%S").time()
-        jam_selesai = datetime.strptime(str(jam_selesai), "%H:%M:%S").time()
+        jam_mulai = datetime.strptime(jam_mulai, "%H:%M").time()
+        jam_selesai = datetime.strptime(jam_selesai, "%H:%M").time()
         
         return jam_mulai <= waktu_sekarang <= jam_selesai
     
     return False
+
+def parse_waktu(waktu_str):
+    """Fungsi untuk mengubah string waktu ke format time Python"""
+    try:
+        return datetime.strptime(waktu_str, "%H:%M:%S").time()
+    except ValueError:
+        return datetime.strptime(waktu_str, "%H:%M").time()
